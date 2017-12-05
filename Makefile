@@ -1,7 +1,8 @@
 CC = g++
 CFLAGS = -g -Wall
-SRCS = main.cpp
-PROG = main
+
+SRCS = src/main.cpp
+PROG = bin/main
 
 OPENCV = `pkg-config opencv --cflags --libs`
 LIBS = $(OPENCV)
