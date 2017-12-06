@@ -1,5 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include "game.hpp" 
 
 using namespace cv;
 using namespace std;
@@ -17,6 +18,10 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    Game game;
+    game.print();
+    cout << endl << game.cell(2, 3) << endl;
+
     namedWindow("edges", 1);
     while(true)
     {
@@ -29,7 +34,7 @@ int main(int argc, char* argv[])
         Canny(edges, edges, 0, 30, 3);
 
         imshow("edges", edges);
-        if(waitKey(30) >= 0) break;
+        if(waitKey(30) == 'q') break;
     }
 
     return 0;
