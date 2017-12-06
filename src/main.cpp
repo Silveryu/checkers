@@ -5,6 +5,23 @@
 using namespace cv;
 using namespace std;
 
+void tile(const vector<Mat> &src, Mat &dst, int grid_x, int grid_y)
+{
+    // patch size
+    int width  = dst.cols/grid_x;
+    int height = dst.rows/grid_y;
+
+    // iterate through grid
+    int k = 0;
+    for(int i = 0; i < grid_y; i++) {
+        for(int j = 0; j < grid_x; j++) {
+            Mat s = src[k++];
+            resize(s,s,Size(width,height));
+            s.copyTo(dst(Rect(j*width,i*height,width,height)));
+        }
+    }
+}
+
 vector<Point2f> getBoardCorners(Mat frame)
 {
     Size patternsize(7, 7); //interior number of corners
@@ -41,26 +58,39 @@ int main(int argc, char* argv[])
     game.print();
     cout << endl << game.cell(2, 3) << endl;
 
-    namedWindow("edges", 1);
-    namedWindow("corners", 1);
+    int gridx = 2;
+    int gridy = 2;
+    namedWindow("grid", WINDOW_NORMAL);
     while(true) {
+        vector<Mat> grid;
+
         Mat frame;
         cap >> frame; // get a new frame from camera
+        //grid.push_back(frame);
 
         Mat gray;
         cvtColor(frame, gray, CV_BGR2GRAY);
+        grid.push_back(gray);
 
-        Mat img = gray.clone();
+        Mat boardCorners = gray.clone();
         vector<Point2f> corners = getBoardCorners(gray);
-        drawChessboardCorners(img, Size(7, 7), Mat(corners), !corners.empty());
+        drawChessboardCorners(boardCorners, Size(7, 7), Mat(corners), !corners.empty());
+        grid.push_back(boardCorners);
 
         Mat edges;
         GaussianBlur(gray, edges, Size(7, 7), 1.5, 1.5);
         Canny(edges, edges, 0, 30, 3);
+        grid.push_back(edges);
 
-        if(!edges.empty()) imshow("edges", edges);
-        if(!img.empty()) imshow("corners", img);
+        while(grid.size() != gridx*gridy) {
+            grid.push_back(gray);
+        }
 
+        int height = 800;
+        int width = height*4/3;
+        Mat res = Mat(height, width, CV_8UC1);
+        tile(grid, res, gridx, gridy);
+        imshow("grid", res);
         if(waitKey(30) == 'q') break;
     }
 
