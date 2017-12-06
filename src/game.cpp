@@ -18,7 +18,7 @@ Game::Game()
             board[x][y] = WHITE;
 }
 
-Game::Cell Game::cell(int x, int y) const
+Cell Game::cell(int x, int y) const
 {
     return board[x][y];
 }
