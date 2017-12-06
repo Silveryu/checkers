@@ -17,3 +17,8 @@ Also called Spanish checkers. It is mainly played in Portugal and in some parts 
 $ make
 $ ./bin/main
 ```
+
+```bash
+$ make footage
+$ ./bin/main bin/footage0.mp4
+```
