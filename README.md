@@ -1,4 +1,4 @@
-# draughts
+# checkers
 
 ## Ruleset
 
