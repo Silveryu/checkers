@@ -2,10 +2,7 @@
 #include <iostream>
 #include "game.hpp"
 
-using namespace cv;
-using namespace std;
-
-void tile(const vector<Mat> &src, Mat &dst, int grid_x, int grid_y)
+void tile(const std::vector<cv::Mat> &src, cv::Mat &dst, int grid_x, int grid_y)
 {
     // patch size
     int width  = dst.cols/grid_x;
@@ -15,35 +12,39 @@ void tile(const vector<Mat> &src, Mat &dst, int grid_x, int grid_y)
     int k = 0;
     for(int i = 0; i < grid_y; i++) {
         for(int j = 0; j < grid_x; j++) {
-            Mat s = src[k++];
-            resize(s,s,Size(width,height));
-            s.copyTo(dst(Rect(j*width,i*height,width,height)));
+            cv::Mat s = src[k++];
+            resize(s, s, cv::Size(width, height));
+            s.copyTo(dst(cv::Rect(j*width, i*height, width, height)));
         }
     }
 }
 
-vector<Point2f> getBoardCorners(Mat frame)
+std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
 {
-    Size patternsize(7, 7); //interior number of corners
-    vector<Point2f> corners; //this will be filled by the detected corners
-    bool patternfound = findChessboardCorners(frame, patternsize, corners, CALIB_CB_ADAPTIVE_THRESH + CALIB_CB_NORMALIZE_IMAGE + CALIB_CB_FAST_CHECK);
-    if(patternfound) {
-        // improve accuracy
-        cornerSubPix(frame, corners, Size(11, 11), Size(-1, -1), TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+    static int count = 0;
+    if (++count == 10) {
+        count = 0;
+        cv::Size patternsize(7, 7); //interior number of corners
+        std::vector<cv::Point2f> corners; //this will be filled by the detected corners
+        bool patternfound = cv::findChessboardCorners(frame, patternsize, corners, cv::CALIB_CB_ADAPTIVE_THRESH + cv::CALIB_CB_NORMALIZE_IMAGE + cv::CALIB_CB_FAST_CHECK);
+        if(patternfound) {
+            // improve accuracy
+            cv::cornerSubPix(frame, corners, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
 
-        cout << endl;
-        for (std::vector<Point2f>::const_iterator i = corners.begin(); i != corners.end(); ++i)
-            cout << *i << ", ";
-        cout << endl;
+            std::cout << std::endl;
+            for (std::vector<cv::Point2f>::const_iterator i = corners.begin(); i != corners.end(); ++i)
+                std::cout << *i << ", ";
+            std::cout << std::endl;
 
-        return corners;
+            return corners;
+        }
     }
-    return vector<Point2f>();
+    return std::vector<cv::Point2f>();
 }
 
 int main(int argc, char* argv[])
 {
-    VideoCapture cap;
+    cv::VideoCapture cap;
     if(argc == 2) {
         cap.open(argv[1]);
     } else {
@@ -56,42 +57,62 @@ int main(int argc, char* argv[])
 
     Game game;
     game.print();
-    cout << endl << game.cell(2, 3) << endl;
+    std::cout << std::endl << game.cell(2, 3) << std::endl;
 
-    int gridx = 2;
-    int gridy = 2;
-    namedWindow("grid", WINDOW_NORMAL);
+    int gridx = 3;
+    int gridy = 3;
+    cv::namedWindow("grid", cv::WINDOW_NORMAL);
     while(true) {
-        vector<Mat> grid;
+        std::vector<cv::Mat> grid;
 
-        Mat frame;
-        cap >> frame; // get a new frame from camera
-        //grid.push_back(frame);
+        cv::Mat frame;
+        cap >> frame;
 
-        Mat gray;
-        cvtColor(frame, gray, CV_BGR2GRAY);
+        // Normalize image
+        cv::Mat gray;
+        cv::cvtColor(frame, gray, CV_BGR2GRAY);
+        medianBlur(gray, gray, 11);
+        equalizeHist(gray, gray);
         grid.push_back(gray);
 
-        Mat boardCorners = gray.clone();
-        vector<Point2f> corners = getBoardCorners(gray);
-        drawChessboardCorners(boardCorners, Size(7, 7), Mat(corners), !corners.empty());
+        cv::Mat boardCorners = gray.clone();
+        std::vector<cv::Point2f> corners = getBoardCorners(gray);
+        cv::drawChessboardCorners(boardCorners, cv::Size(7, 7), cv::Mat(corners), !corners.empty());
         grid.push_back(boardCorners);
 
-        Mat edges;
-        GaussianBlur(gray, edges, Size(7, 7), 1.5, 1.5);
-        Canny(edges, edges, 0, 30, 3);
-        grid.push_back(edges);
+        cv::Mat hsv_image;
+        cv::cvtColor(frame, hsv_image, cv::COLOR_BGR2HSV);
+
+        // Threshold the HSV image, keep only the red pixels
+        cv::Mat reds;
+        cv::inRange(hsv_image, cv::Scalar(160, 100, 100), cv::Scalar(179, 255, 255), reds);
+        cv::GaussianBlur(reds, reds, cv::Size(9, 9), 2, 2);
+        grid.push_back(reds);
+
+        std::vector<cv::Vec3f> circles;
+        cv::HoughCircles(reds, circles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
+
+        cv::Mat redCircles = reds.clone();
+        if(circles.size() == 0) exit(-1);
+        for(size_t current_circle = 0; current_circle < circles.size(); ++current_circle) {
+            cv::Point center(round(circles[current_circle][0]), round(circles[current_circle][1]));
+            int radius = round(circles[current_circle][2]);
+            cv::circle(redCircles, center, radius, cv::Scalar(0, 255, 0), 5);
+        }
+        std::cout << "Red circles:" << circles.size() << std::endl;
+        grid.push_back(redCircles);
 
         while(grid.size() != gridx*gridy) {
+            std::cout << grid.size() << std::endl;
             grid.push_back(gray);
         }
 
         int height = 800;
         int width = height*4/3;
-        Mat res = Mat(height, width, CV_8UC1);
+        cv::Mat res = cv::Mat(height, width, CV_8UC1);
         tile(grid, res, gridx, gridy);
-        imshow("grid", res);
-        if(waitKey(30) == 'q') break;
+        cv::imshow("grid", res);
+        if(cv::waitKey(30) == 'q') break;
     }
 
     return 0;
