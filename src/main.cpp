@@ -69,7 +69,6 @@ int main(int argc, char* argv[])
         // Normalize image for finding board corners
         cv::Mat gray;
         cv::cvtColor(frame, gray, CV_BGR2GRAY);
-        cv::medianBlur(gray, gray, 11);
         cv::equalizeHist(gray, gray);
 
         // Find board corners
@@ -84,6 +83,7 @@ int main(int argc, char* argv[])
         // Threshold the HSV image, keep only the red pixels
         cv::Mat hsv;
         cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
+        cv::medianBlur(hsv, hsv, 11);
         cv::Mat reds;
         cv::inRange(hsv, cv::Scalar(160, 100, 100), cv::Scalar(179, 255, 255), reds);
         cv::GaussianBlur(reds, reds, cv::Size(9, 9), 2, 2);
