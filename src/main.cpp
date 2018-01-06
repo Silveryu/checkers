@@ -2,6 +2,8 @@
 #include <iostream>
 #include "game.hpp"
 
+#define STRIDE 7
+
 void tile(const std::vector<cv::Mat> &src, cv::Mat &dst, int grid_x, int grid_y)
 {
     // patch size
@@ -39,6 +41,33 @@ std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
     return result;
 }
 
+void printVector(std::vector<cv::Point2f> v) {
+    for (std::vector<cv::Point2f>::const_iterator i = v.begin(); i != v.end(); ++i)
+        std::cout << *i << ", ";
+    std::cout << std::endl;
+    std::cout << std::endl;
+}
+
+std::vector<cv::Point2f> getPositionCorners(std::vector<cv::Point2f> corners, int x, int y)
+{
+    std::vector<cv::Point2f> quad;
+    quad.push_back(corners.at(STRIDE*x + y));
+    quad.push_back(corners.at(STRIDE*x + (y + 1)));
+    quad.push_back(corners.at(STRIDE*(x + 1) + y));
+    quad.push_back(corners.at(STRIDE*(x + 1) + (y + 1)));
+    return quad;
+}
+
+bool isPointInsideQuad(cv::Point2f c, std::vector<cv::Point2f> quad)
+{
+    cv::Point2f p0 = quad.at(0);
+    cv::Point2f p1 = quad.at(1);
+    cv::Point2f p2 = quad.at(2);
+    cv::Point2f p3 = quad.at(3);
+    return p0.x <= c.x && c.x <= p3.x &&
+           p0.y <= c.y && c.y <= p3.x;
+}
+
 int main(int argc, char* argv[])
 {
     cv::VideoCapture cap;
@@ -52,14 +81,11 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    Game game;
-    game.print();
-    std::cout << std::endl << game.cell(2, 3) << std::endl;
-
     int gridx = 2;
     int gridy = 2;
     cv::namedWindow("grid", cv::WINDOW_NORMAL);
     while(true) {
+        Game game;
         std::vector<cv::Mat> grid;
 
         // Extract frame, apply bounding box and warp
@@ -74,9 +100,6 @@ int main(int argc, char* argv[])
         // Find board corners
         cv::Mat boardCorners = gray.clone();
         std::vector<cv::Point2f> corners = getBoardCorners(gray);
-        std::cout << corners.size() << std::endl;
-        for (std::vector<cv::Point2f>::const_iterator i = corners.begin(); i != corners.end(); ++i)
-            std::cout << *i << ", ";
         cv::drawChessboardCorners(boardCorners, cv::Size(7, 7), cv::Mat(corners), !corners.empty());
         grid.push_back(boardCorners);
 
@@ -94,12 +117,25 @@ int main(int argc, char* argv[])
         cv::HoughCircles(reds, circles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
         cv::Mat redCircles = reds.clone();
         for(size_t i = 0; i < circles.size(); ++i) {
-            cv::Point center(round(circles[i][0]), round(circles[i][1]));
+            cv::Point2f center(round(circles[i][0]), round(circles[i][1]));
             int radius = round(circles[i][2]);
             cv::circle(redCircles, center, radius, cv::Scalar(0, 255, 0), 5);
+
+            if (!corners.empty()) {
+                for (int x = 0; x < STRIDE-1; x++) {
+                    for (int y = 0; y < STRIDE-1; y++) {
+                        std::vector<cv::Point2f> quad = getPositionCorners(corners, x, y);
+                        if (isPointInsideQuad(center, quad)) {
+                            std::cout << std::endl << "Circle with center" << center << "is a piece that's inside game position (" << x << "," << y << ")" << std::endl;
+                            game.set_red(x, y);
+                        }
+                    }
+                }
+            }
         }
-        std::cout << "Red circles:" << circles.size() << std::endl;
         grid.push_back(redCircles);
+
+        game.print();
 
         // Fill up grid
         while(grid.size() != gridx*gridy)

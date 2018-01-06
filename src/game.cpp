@@ -8,19 +8,21 @@ Game::Game()
     for (int x = 0; x < 8; ++x)
         for (int y = 0; y < 8; ++y)
             board[x][y] = EMPTY;
-
-    for (int y = 0; y < 3; ++y)
-        for (int x = (y + 1) % 2; x < 8; x += 2)
-            board[x][y] = BLACK;
-
-    for (int y = 5; y < 8; ++y)
-        for (int x = (y + 1) % 2; x < 8; x += 2)
-            board[x][y] = WHITE;
 }
 
-Cell Game::cell(int x, int y) const
+Cell Game::get(int x, int y) const
 {
     return board[x][y];
+}
+
+void Game::set_red(int x, int y)
+{
+    board[x][y] = BLACK;
+}
+
+void Game::set_yellow(int x, int y)
+{
+    board[x][y] = WHITE;
 }
 
 void Game::print()
@@ -31,4 +33,5 @@ void Game::print()
             cout << board[x][y];
         }
     }
+    cout << endl << endl;
 }

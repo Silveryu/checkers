@@ -22,3 +22,7 @@ $ ./bin/main
 $ make footage
 $ ./bin/main bin/footage.mp4
 ```
+
+## TODO
+
+- improve silverio's points with cornerSubPix
