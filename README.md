@@ -20,5 +20,5 @@ $ ./bin/main
 
 ```bash
 $ make footage
-$ ./bin/main bin/footage0.mp4
+$ ./bin/main bin/footage.mp4
 ```

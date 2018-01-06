@@ -19,10 +19,9 @@ void tile(const std::vector<cv::Mat> &src, cv::Mat &dst, int grid_x, int grid_y)
     }
 }
 
-static int count = 0;
-
 std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
 {
+    static int count = 0;
     static std::vector<cv::Point2f> result = std::vector<cv::Point2f>();
     if (++count == 5) {
         std::cout << "Calculating board corners at frequency" << count << std::endl;
@@ -63,15 +62,17 @@ int main(int argc, char* argv[])
     while(true) {
         std::vector<cv::Mat> grid;
 
+        // Extract frame, apply bounding box and warp
         cv::Mat frame;
         cap >> frame;
 
-        // Normalize image
+        // Normalize image for finding board corners
         cv::Mat gray;
         cv::cvtColor(frame, gray, CV_BGR2GRAY);
-        medianBlur(gray, gray, 11);
-        equalizeHist(gray, gray);
+        cv::medianBlur(gray, gray, 11);
+        cv::equalizeHist(gray, gray);
 
+        // Find board corners
         cv::Mat boardCorners = gray.clone();
         std::vector<cv::Point2f> corners = getBoardCorners(gray);
         std::cout << corners.size() << std::endl;
@@ -80,10 +81,9 @@ int main(int argc, char* argv[])
         cv::drawChessboardCorners(boardCorners, cv::Size(7, 7), cv::Mat(corners), !corners.empty());
         grid.push_back(boardCorners);
 
+        // Threshold the HSV image, keep only the red pixels
         cv::Mat hsv;
         cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
-
-        // Threshold the HSV image, keep only the red pixels
         cv::Mat reds;
         cv::inRange(hsv, cv::Scalar(160, 100, 100), cv::Scalar(179, 255, 255), reds);
         cv::GaussianBlur(reds, reds, cv::Size(9, 9), 2, 2);
@@ -92,8 +92,6 @@ int main(int argc, char* argv[])
         // Find red circles
         std::vector<cv::Vec3f> circles;
         cv::HoughCircles(reds, circles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
-
-        // Draw red circles
         cv::Mat redCircles = reds.clone();
         for(size_t i = 0; i < circles.size(); ++i) {
             cv::Point center(round(circles[i][0]), round(circles[i][1]));
@@ -103,9 +101,9 @@ int main(int argc, char* argv[])
         std::cout << "Red circles:" << circles.size() << std::endl;
         grid.push_back(redCircles);
 
-        // Fill up grid with empty images
-        while(grid.size() != gridx*gridy) grid.push_back(cv::Mat(frame.rows, frame.cols, CV_8UC1, 255.0));
-
+        // Fill up grid
+        while(grid.size() != gridx*gridy)
+            grid.push_back(cv::Mat(frame.rows, frame.cols, CV_8UC1, 255.0));
         int height = 800;
         int width = height*4/3;
         cv::Mat res = cv::Mat(height, width, CV_8UC1);

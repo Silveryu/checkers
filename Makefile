@@ -14,6 +14,5 @@ $(PROG):$(SRCS)
 
 footage:
 	mkdir -p bin
-	youtube-dl https://www.youtube.com/watch?v=unZPeg1zL3w -o "bin/footage0.%(ext)s"
-	youtube-dl https://www.youtube.com/watch?v=fVLDUnI42f4 -o "bin/footage1.%(ext)s"
+	youtube-dl https://www.youtube.com/watch?v=9Maesq2iISM -o "bin/footage.%(ext)s"
 
