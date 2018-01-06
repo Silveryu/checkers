@@ -19,28 +19,25 @@ void tile(const std::vector<cv::Mat> &src, cv::Mat &dst, int grid_x, int grid_y)
     }
 }
 
+static int count = 0;
+
 std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
 {
-    static int count = 0;
-    if (++count == 10) {
-        std::cout << "Calculating board corners..." << count << std::endl;
+    static std::vector<cv::Point2f> result = std::vector<cv::Point2f>();
+    if (++count == 5) {
+        std::cout << "Calculating board corners at frequency" << count << std::endl;
         count = 0;
         cv::Size patternsize(7, 7); //interior number of corners
-        std::vector<cv::Point2f> corners; //this will be filled by the detected corners
-        bool patternfound = cv::findChessboardCorners(frame, patternsize, corners, cv::CALIB_CB_ADAPTIVE_THRESH + cv::CALIB_CB_NORMALIZE_IMAGE + cv::CALIB_CB_FAST_CHECK);
+        std::vector<cv::Point2f> tmp = std::vector<cv::Point2f>();
+        bool patternfound = cv::findChessboardCorners(frame, patternsize, tmp, cv::CALIB_CB_ADAPTIVE_THRESH + cv::CALIB_CB_NORMALIZE_IMAGE + cv::CALIB_CB_FAST_CHECK);
         if(patternfound) {
             // improve accuracy
-            cv::cornerSubPix(frame, corners, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
-
-            std::cout << std::endl;
-            for (std::vector<cv::Point2f>::const_iterator i = corners.begin(); i != corners.end(); ++i)
-                std::cout << *i << ", ";
-            std::cout << std::endl;
-
-            return corners;
+            cv::cornerSubPix(frame, tmp, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+            result = std::vector<cv::Point2f>(tmp);
         }
     }
-    return std::vector<cv::Point2f>();
+
+    return result;
 }
 
 int main(int argc, char* argv[])
@@ -77,6 +74,9 @@ int main(int argc, char* argv[])
 
         cv::Mat boardCorners = gray.clone();
         std::vector<cv::Point2f> corners = getBoardCorners(gray);
+        std::cout << corners.size() << std::endl;
+        for (std::vector<cv::Point2f>::const_iterator i = corners.begin(); i != corners.end(); ++i)
+            std::cout << *i << ", ";
         cv::drawChessboardCorners(boardCorners, cv::Size(7, 7), cv::Mat(corners), !corners.empty());
         grid.push_back(boardCorners);
 
@@ -95,9 +95,9 @@ int main(int argc, char* argv[])
 
         // Draw red circles
         cv::Mat redCircles = reds.clone();
-        for(size_t current_circle = 0; current_circle < circles.size(); ++current_circle) {
-            cv::Point center(round(circles[current_circle][0]), round(circles[current_circle][1]));
-            int radius = round(circles[current_circle][2]);
+        for(size_t i = 0; i < circles.size(); ++i) {
+            cv::Point center(round(circles[i][0]), round(circles[i][1]));
+            int radius = round(circles[i][2]);
             cv::circle(redCircles, center, radius, cv::Scalar(0, 255, 0), 5);
         }
         std::cout << "Red circles:" << circles.size() << std::endl;
