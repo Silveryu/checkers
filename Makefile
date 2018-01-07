@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -g -Wall -Wextra
+CFLAGS = -g -std=c++11 -Wall -Wextra -pedantic
 
 SRCS = src/main.cpp src/game.cpp
 PROG = bin/main

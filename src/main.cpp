@@ -2,6 +2,13 @@
 #include <iostream>
 #include "game.hpp"
 
+void printVector(std::vector<cv::Point2f> v) {
+    for (std::vector<cv::Point2f>::const_iterator i = v.begin(); i != v.end(); ++i)
+        std::cout << *i << ", ";
+    std::cout << std::endl;
+    std::cout << std::endl;
+}
+
 void tile(const std::vector<cv::Mat> &src, cv::Mat &dst, int grid_x, int grid_y)
 {
     // patch size
@@ -80,19 +87,19 @@ std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
             // improve accuracy
             cv::cornerSubPix(frame, tmp, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
             result = std::vector<cv::Point2f>(tmp);
+            printVector(result);
+            std::sort(result.begin(), result.end(), [](const cv::Point2f &a, const cv::Point2f &b) { return a.x > b.x; });
+            for (auto i = result.begin(); i != result.end(); i += 7)
+                std::sort(i, i+7, [](const cv::Point2f &a, const cv::Point2f &b) { return a.y < b.y; });
+            printVector(result);
             result = completeBoardCorners(result);
+            printVector(result);
         }
     }
 
     return result;
 }
 
-void printVector(std::vector<cv::Point2f> v) {
-    for (std::vector<cv::Point2f>::const_iterator i = v.begin(); i != v.end(); ++i)
-        std::cout << *i << ", ";
-    std::cout << std::endl;
-    std::cout << std::endl;
-}
 
 std::vector<cv::Point2f> getPositionCorners(std::vector<cv::Point2f> corners, int x, int y)
 {
@@ -109,8 +116,7 @@ bool isPointInsideQuad(cv::Point2f c, std::vector<cv::Point2f> quad)
 {
     cv::Point2f p0 = quad.at(0);
     cv::Point2f p3 = quad.at(3);
-    return p0.x <= c.x && c.x <= p3.x &&
-           p0.y <= c.y && c.y <= p3.y;
+    return p0.x <= c.x && c.x <= p3.x && p0.y <= c.y && c.y <= p3.y;
 }
 
 int main(int argc, char* argv[])
@@ -146,7 +152,6 @@ int main(int argc, char* argv[])
         cv::Mat boardCorners = gray.clone();
         std::vector<cv::Point2f> corners = getBoardCorners(gray);
         cv::drawChessboardCorners(boardCorners, cv::Size(9, 9), cv::Mat(corners), !corners.empty());
-        printVector(corners);
         grid.push_back(boardCorners);
 
         // Threshold the HSV image, keep only the red pixels
@@ -170,8 +175,6 @@ int main(int argc, char* argv[])
                 for (int x = 0; x < BOARD_SIZE; x++) {
                     for (int y = 0; y < BOARD_SIZE; y++) {
                         std::vector<cv::Point2f> quad = getPositionCorners(corners, x, y);
-                        std::cout << "(" << x << ", " << y << ") ";
-                        printVector(quad);
                         if (isPointInsideQuad(center, quad)) {
                             std::cout << std::endl << "Circle with center" << center << "is a piece that's inside game position (" << x << "," << y << ")" << std::endl;
                             game.set_red(x, y);
