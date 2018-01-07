@@ -25,7 +25,7 @@ std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
 {
     static int count = 0;
     static std::vector<cv::Point2f> result = std::vector<cv::Point2f>();
-    if (++count == 5) {
+    if (++count == 10) {
         count = 0;
         cv::Size patternsize(7, 7); //interior number of corners
         std::vector<cv::Point2f> tmp = std::vector<cv::Point2f>();
