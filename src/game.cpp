@@ -27,9 +27,9 @@ void Game::set_yellow(int x, int y)
 
 void Game::print()
 {
-    for (int x = 0; x < 8; ++x) {
+    for (int y = 0; y < 8; ++y) {
         cout << endl;
-        for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
             cout << board[x][y];
         }
     }
