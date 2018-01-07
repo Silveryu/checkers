@@ -26,7 +26,6 @@ std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
     static int count = 0;
     static std::vector<cv::Point2f> result = std::vector<cv::Point2f>();
     if (++count == 5) {
-        std::cout << "Calculating board corners at frequency" << count << std::endl;
         count = 0;
         cv::Size patternsize(7, 7); //interior number of corners
         std::vector<cv::Point2f> tmp = std::vector<cv::Point2f>();
@@ -145,7 +144,7 @@ int main(int argc, char* argv[])
         cv::Mat res = cv::Mat(height, width, CV_8UC1);
         tile(grid, res, gridx, gridy);
         cv::imshow("grid", res);
-        if(cv::waitKey(30) == 'q') break;
+        if(cv::waitKey(1) == 'p') while(cv::waitKey(1) != 'p');
     }
 
     return 0;
