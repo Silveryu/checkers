@@ -107,8 +107,9 @@ std::vector<cv::Point2f> completeBoardCorners(std::vector<cv::Point2f> insideCor
 std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
 {
     static int count = 0;
-    static std::vector<cv::Point2f> result = std::vector<cv::Point2f>();
-    if (++count == 5) {
+    std::vector<cv::Point2f> result = std::vector<cv::Point2f>();
+
+    if (++count == 1) {
         count = 0;
         cv::Size patternsize(7, 7); //interior number of corners
         std::vector<cv::Point2f> tmp = std::vector<cv::Point2f>();
@@ -127,7 +128,6 @@ std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
 
     return result;
 }
-
 
 std::vector<cv::Point2f> getPositionCorners(std::vector<cv::Point2f> corners, int x, int y)
 {
@@ -170,6 +170,7 @@ int main(int argc, char* argv[])
     int boardx = 8;
     int boardy = 8;
     cv::namedWindow("grid", cv::WINDOW_NORMAL);
+
     while(true) {
         Game game;
         std::vector<cv::Mat> grid;
@@ -214,7 +215,6 @@ int main(int argc, char* argv[])
         std::vector<cv::Vec3f> yellowCircles;
         cv::HoughCircles(yellows, yellowCircles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
 
-        // Check if circles are inside game positions
         if (!corners.empty()) {
             for (int x = 0; x < BOARD_SIZE; x++) {
                 for (int y = 0; y < BOARD_SIZE; y++) {
@@ -237,50 +237,49 @@ int main(int argc, char* argv[])
                     }
                 }
             }
+            game.print();
         }
-        game.print();
 
         // Fill up grid
-        while(grid.size() != gridx*gridy)
-            grid.push_back(cv::Mat(frame.rows, frame.cols, CV_8UC1, 255.0));
         int height = 800;
         int width = height*4/3;
         cv::Mat res = cv::Mat(height, width, CV_8UC1);
         tile(grid, res, gridx, gridy);
         cv::imshow("grid", res);
-        if(cv::waitKey(1) == 'p') while(cv::waitKey(1) != 'p');
 
         //Fill up board
-        int dim = 400;
-        cv::Mat white = cv::Mat(dim, dim, CV_8UC3, cv::Scalar(255,255,255));
-        cv::Mat black = cv::Mat::ones(dim, dim, CV_8UC3);
+        if (!corners.empty()) {
+            int dim = 400;
+            cv::Mat white = cv::Mat(dim, dim, CV_8UC3, cv::Scalar(255,255,255));
+            cv::Mat black = cv::Mat::ones(dim, dim, CV_8UC3);
 
-        cv::Mat blackPiece = cv::Mat::ones(dim, dim, CV_8UC3);
-        cv::circle(blackPiece, cv::Point(dim/2,dim/2),dim/4,cv::Scalar(0,0,255), -1, 8, 0);
+            cv::Mat blackPiece = cv::Mat::ones(dim, dim, CV_8UC3);
+            cv::circle(blackPiece, cv::Point(dim/2,dim/2),dim/4,cv::Scalar(0,0,255), -1, 8, 0);
 
-        cv::Mat whitePiece = cv::Mat::ones(dim, dim, CV_8UC3);
-        cv::circle(whitePiece, cv::Point(dim/2,dim/2),dim/4,cv::Scalar(0,255,255), -1, 8, 0);
+            cv::Mat whitePiece = cv::Mat::ones(dim, dim, CV_8UC3);
+            cv::circle(whitePiece, cv::Point(dim/2,dim/2),dim/4,cv::Scalar(0,255,255), -1, 8, 0);
 
-        int j = -1;
+            int j = -1;
 
-        for(int i = 0; board.size() != boardx*boardy;++i) {
-            if(i % 8 == 0){
-                ++j;
-                i=0;
+            for(int i = 0; board.size() != boardx*boardy;++i) {
+                if(i % 8 == 0){
+                    ++j;
+                    i=0;
+                }
+
+                if((i+j) % 2 == 0){
+                    int pieceType = game.get(i,j);
+                    if(pieceType == 1) board.push_back(blackPiece);
+                    else if(pieceType == 2) board.push_back(whitePiece);
+                    else board.push_back(black);
+                } else {
+                    board.push_back(white);
+                }
             }
-
-            if((i+j) % 2 == 0){
-                int pieceType = game.get(i,j);
-                if(pieceType == 1) board.push_back(blackPiece);
-                else if(pieceType == 2) board.push_back(whitePiece);
-                else board.push_back(black);
-            } else {
-                board.push_back(white);
-            }
+            cv::Mat boardRes = cv::Mat(dim, dim, CV_8UC3);
+            tile(board, boardRes, boardx, boardy);
+            cv::imshow("board", boardRes);
         }
-        cv::Mat boardRes = cv::Mat(dim, dim, CV_8UC3);
-        tile(board, boardRes, boardx, boardy);
-        cv::imshow("board", boardRes);
         if(cv::waitKey(1) == 'p') while(cv::waitKey(1) != 'p');
     }
 
