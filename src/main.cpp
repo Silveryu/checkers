@@ -48,42 +48,78 @@ std::vector<cv::Point2f> completeBoardCorners(std::vector<cv::Point2f> insideCor
         insideCorners[0].x + abs(insideCorners[0].x - insideCorners[insideCornerDim].x),
         insideCorners[0].y - abs(insideCorners[0].y - insideCorners[1].y)
     );
-
+    
     cv::Point2f vertex2 = cv::Point2f(
+        insideCorners[insideCornerDim-1].x + abs(insideCorners[insideCornerDim-1].x - insideCorners[insideCornerDim*2-1].x),
+        insideCorners[insideCornerDim-1].y + abs(insideCorners[insideCornerDim-1].y - insideCorners[insideCornerDim-2].y)
+    );
+
+    cv::Point2f vertex3 = cv::Point2f(
+        insideCorners[insideCorners.size()-insideCornerDim].x - abs(insideCorners[insideCorners.size()-insideCornerDim].x - insideCorners[insideCorners.size()-insideCornerDim*2].x),
+        insideCorners[insideCorners.size()-insideCornerDim].y - abs(insideCorners[insideCorners.size()-insideCornerDim].y - insideCorners[insideCorners.size()-insideCornerDim+1].y)
+    );
+
+    cv::Point2f vertex4 = cv::Point2f(
         insideCorners[insideCorners.size()-1].x - abs(insideCorners[insideCorners.size()-1].x - insideCorners[insideCorners.size()-1-insideCornerDim].x),
         insideCorners[insideCorners.size()-1].y + abs(insideCorners[insideCorners.size()-1].y - insideCorners[insideCorners.size()-2].y)
     );
 
+
     int cornerDim = insideCornerDim+2;
-    std::vector<cv::Point2f> corners = std::vector<cv::Point2f>(cornerDim*cornerDim);
+    std::vector<cv::Point2f> outterCorners= std::vector<cv::Point2f>();
 
     // first column
-    corners[0] = vertex1;
+    
+    outterCorners.push_back(vertex1);
+    outterCorners.push_back(vertex2);
+    outterCorners.push_back(vertex3);
+    outterCorners.push_back(vertex4);
+
+
+    for(int i = 0; i < insideCornerDim; ++i){   
+        outterCorners.push_back(cv::Point2f(
+            insideCorners[i].x + abs(insideCorners[i].x - insideCorners[insideCornerDim+i].x), 
+            insideCorners[i].y
+        ));
+    }
+
     for(int i = 0; i < insideCornerDim; ++i){
-        corners[i+1] =  cv::Point2f(vertex1.x, insideCorners[i].y);
-    }
-    corners[cornerDim-1] = cv::Point2f(vertex1.x, vertex2.y);
+        int idx = insideCornerDim*(i+1)-1;
+        outterCorners.push_back(cv::Point2f(
+            insideCorners[idx].x, 
+            insideCorners[idx].y + abs(insideCorners[idx].y - insideCorners[idx-1].y))  
+        );
 
-    // for every insideCorners' x coord
-    for(int i = 1; i < cornerDim -1 ; ++i){
-        float xCoord = insideCorners[(i-1)*insideCornerDim].x;
-        corners[i*cornerDim] = cv::Point2f(xCoord, vertex1.y);
-
-        //for every Corners' y coord
-        for(int j = 0;j < insideCornerDim;j++){
-            corners[i*cornerDim+j+1] = cv::Point2f(xCoord, insideCorners[j].y);
-        }
-
-        corners[(i+1)*cornerDim-1] = cv::Point2f(xCoord, vertex2.y);
     }
 
-    // last column
-    corners[cornerDim*(cornerDim-1)] = cv::Point2f(vertex2.x, vertex1.y);
+    for(int i = 0; i < insideCornerDim; ++i){   
+        int idx = insideCorners.size()-insideCornerDim + i;
+        outterCorners.push_back(cv::Point2f(
+            insideCorners[idx].x - abs(insideCorners[idx].x - insideCorners[idx-insideCornerDim].x), 
+            insideCorners[idx].y 
+        ));
+       
+    }
+
+
     for(int i = 0; i < insideCornerDim; ++i){
-        corners[cornerDim*(cornerDim-1)+i+1] =  cv::Point2f(vertex2.x, insideCorners[i].y);
+        int idx = insideCornerDim*i;
+        outterCorners.push_back(cv::Point2f(
+            insideCorners[idx].x,
+            insideCorners[idx].y - abs(insideCorners[idx].y - insideCorners[idx+1].y)
+        ));
+       
     }
-    corners[corners.size()-1] = vertex2;
 
+    std::vector<cv::Point2f> corners = insideCorners;
+
+    corners.insert(corners.end(), outterCorners.begin(), outterCorners.end());
+
+    printVector(corners);
+
+    std::sort(corners.begin(), corners.end(), [](const cv::Point2f &a, const cv::Point2f &b) { return a.x < b.x; });
+    for (auto i = corners.begin(); i != corners.end(); i += 9)
+        std::sort(i, i+9, [](const cv::Point2f &a, const cv::Point2f &b) { return a.y < b.y; });
 
     return std::vector<cv::Point2f>(corners);
 }
@@ -107,10 +143,8 @@ std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
                 std::sort(i, i+7, [](const cv::Point2f &a, const cv::Point2f &b) { return a.y < b.y; });
             printVector(result);
             result = completeBoardCorners(result);
-            std::sort(result.begin(), result.end(), [](const cv::Point2f &a, const cv::Point2f &b) { return a.x < b.x; });
-            for (auto i = result.begin(); i != result.end(); i += 9)
-                std::sort(i, i+9, [](const cv::Point2f &a, const cv::Point2f &b) { return a.y < b.y; });
-            printVector(result);
+            cv::cornerSubPix(frame, result, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+
 
         }
     }
