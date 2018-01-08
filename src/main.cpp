@@ -176,11 +176,17 @@ int main(int argc, char* argv[])
         cv::GaussianBlur(reds, reds, cv::Size(9, 9), 2, 2);
         grid.push_back(reds);
 
+        // Threshold the HSV image, keep only the yellow pixels
+        cv::Mat yellows;
+        cv::inRange(hsv, cv::Scalar(25, 20, 20), cv::Scalar(32, 255, 255), yellows);
+        cv::GaussianBlur(yellows, yellows, cv::Size(9, 9), 2, 2);
+        grid.push_back(yellows);
+
         // Find red and yellow circles
         std::vector<cv::Vec3f> redCircles;
         cv::HoughCircles(reds, redCircles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
-        //std::vector<cv::Vec3f> yellowCircles;
-        //cv::HoughCircles(yellows, yellowCircles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
+        std::vector<cv::Vec3f> yellowCircles;
+        cv::HoughCircles(yellows, yellowCircles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
 
         // Check if circles are inside game positions
         if (!corners.empty()) {
