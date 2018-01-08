@@ -78,6 +78,7 @@ std::vector<cv::Point2f> completeBoardCorners(std::vector<cv::Point2f> insideCor
     }
     corners[corners.size()-1] = vertex2;
 
+
     return std::vector<cv::Point2f>(corners);
 }
 
@@ -100,7 +101,11 @@ std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
                 std::sort(i, i+7, [](const cv::Point2f &a, const cv::Point2f &b) { return a.y < b.y; });
             printVector(result);
             result = completeBoardCorners(result);
+            std::sort(result.begin(), result.end(), [](const cv::Point2f &a, const cv::Point2f &b) { return a.x < b.x; });
+            for (auto i = result.begin(); i != result.end(); i += 9)
+                std::sort(i, i+9, [](const cv::Point2f &a, const cv::Point2f &b) { return a.y < b.y; });
             printVector(result);
+
         }
     }
 
@@ -123,13 +128,8 @@ bool isPointInsideQuad(cv::Point2f c, std::vector<cv::Point2f> quad)
 {
     cv::Point2f p0 = quad.at(0);
     cv::Point2f p3 = quad.at(3);
-    bool b = p0.x < c.x && c.x < p3.x &&
-             p0.y < c.y && c.y < p3.y;
-    std::cout << p0.x << " <= " << c.x << " <= " << p3.x;
-    std::cout << "   &&   ";
-    std::cout << p0.y << " <= " << c.y << " <= " << p3.y;
-    std::cout << " = " << b << std::endl;
-    return b;
+    return p0.x < c.x && c.x < p3.x &&
+           p0.y < c.y && c.y < p3.y;
 }
 
 int main(int argc, char* argv[])
