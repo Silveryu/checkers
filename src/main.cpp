@@ -108,7 +108,7 @@ std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
 {
     static int count = 0;
     static std::vector<cv::Point2f> result = std::vector<cv::Point2f>();
-    if (++count == 1) {
+    if (++count == 5) {
         count = 0;
         cv::Size patternsize(7, 7); //interior number of corners
         std::vector<cv::Point2f> tmp = std::vector<cv::Point2f>();
@@ -170,10 +170,6 @@ int main(int argc, char* argv[])
     int boardx = 8;
     int boardy = 8;
     cv::namedWindow("grid", cv::WINDOW_NORMAL);
-    cv::Mat currentReferenceFrame;
-    cap >> currentReferenceFrame;
-    cv::cvtColor(currentReferenceFrame, currentReferenceFrame, CV_BGR2GRAY);
-
     while(true) {
         Game game;
         std::vector<cv::Mat> grid;
@@ -253,7 +249,7 @@ int main(int argc, char* argv[])
         tile(grid, res, gridx, gridy);
         cv::imshow("grid", res);
         if(cv::waitKey(1) == 'p') while(cv::waitKey(1) != 'p');
-        
+
         //Fill up board
         int dim = 400;
         cv::Mat white = cv::Mat(dim, dim, CV_8UC3, cv::Scalar(255,255,255));
@@ -266,33 +262,26 @@ int main(int argc, char* argv[])
         cv::circle(whitePiece, cv::Point(dim/2,dim/2),dim/4,cv::Scalar(0,255,255), -1, 8, 0);
 
         int j = -1;
-        
-        for(int i = 0; board.size() != boardx*boardy;++i){
+
+        for(int i = 0; board.size() != boardx*boardy;++i) {
             if(i % 8 == 0){
                 ++j;
                 i=0;
-            }           
-            
-            if((i+j) % 2 == 0){
-
-                int pieceType = game.get(i,j);
-                if(pieceType == 1)
-                    board.push_back(blackPiece);
-                else if(pieceType == 2)
-                    board.push_back(whitePiece);
-                else
-                    board.push_back(black);
             }
-            else
+
+            if((i+j) % 2 == 0){
+                int pieceType = game.get(i,j);
+                if(pieceType == 1) board.push_back(blackPiece);
+                else if(pieceType == 2) board.push_back(whitePiece);
+                else board.push_back(black);
+            } else {
                 board.push_back(white);
-
-
+            }
         }
         cv::Mat boardRes = cv::Mat(dim, dim, CV_8UC3);
         tile(board, boardRes, boardx, boardy);
         cv::imshow("board", boardRes);
         if(cv::waitKey(1) == 'p') while(cv::waitKey(1) != 'p');
-
     }
 
     return 0;
