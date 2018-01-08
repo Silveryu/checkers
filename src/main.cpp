@@ -16,6 +16,12 @@ void printVector(std::vector<cv::Vec3f> v) {
     std::cout << std::endl;
 }
 
+void sharpen(cv::Mat src, cv::Mat dst)
+{
+    cv::GaussianBlur(src, dst, cv::Size(0, 0), 3);
+    cv::addWeighted(src, 1.5, dst, -0.5, 0, dst);
+}
+
 void tile(const std::vector<cv::Mat> &src, cv::Mat &dst, int grid_x, int grid_y)
 {
     // patch size
@@ -86,7 +92,7 @@ std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
 {
     static int count = 0;
     static std::vector<cv::Point2f> result = std::vector<cv::Point2f>();
-    if (++count == 5) {
+    if (++count == 1) {
         count = 0;
         cv::Size patternsize(7, 7); //interior number of corners
         std::vector<cv::Point2f> tmp = std::vector<cv::Point2f>();
@@ -165,6 +171,8 @@ int main(int argc, char* argv[])
         cv::Mat gray;
         cv::cvtColor(frame, gray, CV_BGR2GRAY);
         cv::equalizeHist(gray, gray);
+        cv::Mat grayClone = gray.clone();
+        sharpen(grayClone, gray);
 
         // Find board corners
         cv::Mat boardCorners = gray.clone();
