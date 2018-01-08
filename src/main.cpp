@@ -9,6 +9,13 @@ void printVector(std::vector<cv::Point2f> v) {
     std::cout << std::endl;
 }
 
+void printVector(std::vector<cv::Vec3f> v) {
+    for (std::vector<cv::Vec3f>::const_iterator i = v.begin(); i != v.end(); ++i)
+        std::cout << *i << ", ";
+    std::cout << std::endl;
+    std::cout << std::endl;
+}
+
 void tile(const std::vector<cv::Mat> &src, cv::Mat &dst, int grid_x, int grid_y)
 {
     // patch size
@@ -53,7 +60,7 @@ std::vector<cv::Point2f> completeBoardCorners(std::vector<cv::Point2f> insideCor
 
     // for every insideCorners' x coord
     for(int i = 1; i < cornerDim -1 ; ++i){
-        int xCoord = insideCorners[(i-1)*insideCornerDim].x;
+        float xCoord = insideCorners[(i-1)*insideCornerDim].x;
         corners[i*cornerDim] = cv::Point2f(xCoord, vertex1.y);
 
         //for every Corners' y coord
@@ -116,7 +123,13 @@ bool isPointInsideQuad(cv::Point2f c, std::vector<cv::Point2f> quad)
 {
     cv::Point2f p0 = quad.at(0);
     cv::Point2f p3 = quad.at(3);
-    return p0.x <= c.x && c.x <= p3.x && p0.y <= c.y && c.y <= p3.y;
+    bool b = p0.x < c.x && c.x < p3.x &&
+             p0.y < c.y && c.y < p3.y;
+    std::cout << p0.x << " <= " << c.x << " <= " << p3.x;
+    std::cout << "   &&   ";
+    std::cout << p0.y << " <= " << c.y << " <= " << p3.y;
+    std::cout << " = " << b << std::endl;
+    return b;
 }
 
 int main(int argc, char* argv[])
@@ -167,13 +180,17 @@ int main(int argc, char* argv[])
         std::vector<cv::Vec3f> circles;
         cv::HoughCircles(reds, circles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
         cv::Mat redCircles = reds.clone();
-        for(size_t i = 0; i < circles.size(); ++i) {
-            cv::Point2f center(round(circles[i][0]), round(circles[i][1]));
+        std::cout << circles.size() << " red circles" << std::endl;
+        printVector(circles);
+        for(size_t i = 0; i < circles.size(); i++) {
+            cv::Point2f center(circles[i][0], circles[i][1]);
             int radius = round(circles[i][2]);
             cv::circle(redCircles, center, radius, cv::Scalar(0, 255, 0), 5);
+            std::cout << std::endl << "Circle with center" << center << std::endl;
             if (!corners.empty()) {
                 for (int x = 0; x < BOARD_SIZE; x++) {
                     for (int y = 0; y < BOARD_SIZE; y++) {
+                        std::cout << x << "," << y << std::endl;
                         std::vector<cv::Point2f> quad = getPositionCorners(corners, x, y);
                         if (isPointInsideQuad(center, quad)) {
                             std::cout << std::endl << "Circle with center" << center << "is a piece that's inside game position (" << x << "," << y << ")" << std::endl;
@@ -184,7 +201,6 @@ int main(int argc, char* argv[])
             }
         }
         grid.push_back(redCircles);
-
         game.print();
 
         // Fill up grid
