@@ -174,6 +174,11 @@ int main(int argc, char* argv[])
         cv::Mat grayClone = gray.clone();
         sharpen(grayClone, gray);
 
+        cv::Mat edges;
+        cv::GaussianBlur(gray, edges, cv::Size(5, 5), 1.5, 1.5);
+        cv::Canny(edges, edges, 0, 30, 3);
+        grid.push_back(edges);
+
         // Find board corners
         cv::Mat boardCorners = gray.clone();
         std::vector<cv::Point2f> corners = getBoardCorners(gray);
