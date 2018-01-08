@@ -2,20 +2,6 @@
 #include <iostream>
 #include "game.hpp"
 
-void printVector(std::vector<cv::Point2f> v) {
-    for (std::vector<cv::Point2f>::const_iterator i = v.begin(); i != v.end(); ++i)
-        std::cout << *i << ", ";
-    std::cout << std::endl;
-    std::cout << std::endl;
-}
-
-void printVector(std::vector<cv::Vec3f> v) {
-    for (std::vector<cv::Vec3f>::const_iterator i = v.begin(); i != v.end(); ++i)
-        std::cout << *i << ", ";
-    std::cout << std::endl;
-    std::cout << std::endl;
-}
-
 void sharpen(cv::Mat src, cv::Mat dst)
 {
     cv::GaussianBlur(src, dst, cv::Size(0, 0), 3);
@@ -48,7 +34,7 @@ std::vector<cv::Point2f> completeBoardCorners(std::vector<cv::Point2f> insideCor
         insideCorners[0].x + abs(insideCorners[0].x - insideCorners[insideCornerDim].x),
         insideCorners[0].y - abs(insideCorners[0].y - insideCorners[1].y)
     );
-    
+
     cv::Point2f vertex2 = cv::Point2f(
         insideCorners[insideCornerDim-1].x + abs(insideCorners[insideCornerDim-1].x - insideCorners[insideCornerDim*2-1].x),
         insideCorners[insideCornerDim-1].y + abs(insideCorners[insideCornerDim-1].y - insideCorners[insideCornerDim-2].y)
@@ -69,16 +55,15 @@ std::vector<cv::Point2f> completeBoardCorners(std::vector<cv::Point2f> insideCor
     std::vector<cv::Point2f> outterCorners= std::vector<cv::Point2f>();
 
     // first column
-    
     outterCorners.push_back(vertex1);
     outterCorners.push_back(vertex2);
     outterCorners.push_back(vertex3);
     outterCorners.push_back(vertex4);
 
 
-    for(int i = 0; i < insideCornerDim; ++i){   
+    for(int i = 0; i < insideCornerDim; ++i){
         outterCorners.push_back(cv::Point2f(
-            insideCorners[i].x + abs(insideCorners[i].x - insideCorners[insideCornerDim+i].x), 
+            insideCorners[i].x + abs(insideCorners[i].x - insideCorners[insideCornerDim+i].x),
             insideCorners[i].y
         ));
     }
@@ -86,19 +71,18 @@ std::vector<cv::Point2f> completeBoardCorners(std::vector<cv::Point2f> insideCor
     for(int i = 0; i < insideCornerDim; ++i){
         int idx = insideCornerDim*(i+1)-1;
         outterCorners.push_back(cv::Point2f(
-            insideCorners[idx].x, 
-            insideCorners[idx].y + abs(insideCorners[idx].y - insideCorners[idx-1].y))  
+            insideCorners[idx].x,
+            insideCorners[idx].y + abs(insideCorners[idx].y - insideCorners[idx-1].y))
         );
 
     }
 
-    for(int i = 0; i < insideCornerDim; ++i){   
+    for(int i = 0; i < insideCornerDim; ++i){
         int idx = insideCorners.size()-insideCornerDim + i;
         outterCorners.push_back(cv::Point2f(
-            insideCorners[idx].x - abs(insideCorners[idx].x - insideCorners[idx-insideCornerDim].x), 
-            insideCorners[idx].y 
+            insideCorners[idx].x - abs(insideCorners[idx].x - insideCorners[idx-insideCornerDim].x),
+            insideCorners[idx].y
         ));
-       
     }
 
 
@@ -108,14 +92,11 @@ std::vector<cv::Point2f> completeBoardCorners(std::vector<cv::Point2f> insideCor
             insideCorners[idx].x,
             insideCorners[idx].y - abs(insideCorners[idx].y - insideCorners[idx+1].y)
         ));
-       
     }
 
     std::vector<cv::Point2f> corners = insideCorners;
 
     corners.insert(corners.end(), outterCorners.begin(), outterCorners.end());
-
-    printVector(corners);
 
     std::sort(corners.begin(), corners.end(), [](const cv::Point2f &a, const cv::Point2f &b) { return a.x < b.x; });
     for (auto i = corners.begin(); i != corners.end(); i += 9)
@@ -137,15 +118,11 @@ std::vector<cv::Point2f> getBoardCorners(cv::Mat frame)
             // improve accuracy
             cv::cornerSubPix(frame, tmp, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
             result = std::vector<cv::Point2f>(tmp);
-            printVector(result);
             std::sort(result.begin(), result.end(), [](const cv::Point2f &a, const cv::Point2f &b) { return a.x > b.x; });
             for (auto i = result.begin(); i != result.end(); i += 7)
                 std::sort(i, i+7, [](const cv::Point2f &a, const cv::Point2f &b) { return a.y < b.y; });
-            printVector(result);
             result = completeBoardCorners(result);
             cv::cornerSubPix(frame, result, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
-
-
         }
     }
 
@@ -176,30 +153,6 @@ bool isPointInsideQuad(cv::Point2f c, std::vector<cv::Point2f> quad)
            p0.y-thresh_y < c.y && c.y < p3.y+thresh_y;
 }
 
-cv::Mat differenceBetween(cv::Mat frame, cv::Mat reference)
-{
-    cv::Mat diff;
-    absdiff(frame, reference, diff);
-
-    // Get the mask if difference greater than threshold
-    int th = 10;
-    cv::Mat mask(frame.size(), CV_8UC1);
-    for(int j = 0; j < diff.rows; ++j) {
-        for(int i = 0; i < diff.cols; ++i) {
-            cv::Vec3b pix = diff.at<cv::Vec3b>(j, i);
-            int val = (pix[0] + pix[1] + pix[2]);
-            if (val > th) {
-                mask.at<unsigned char>(j,i) = 255;
-            }
-        }
-    }
-
-    // get the foreground
-    cv::Mat res;
-    cv::bitwise_and(reference, reference, res, mask);
-    return res;
-}
-
 int main(int argc, char* argv[])
 {
     cv::VideoCapture cap;
@@ -213,8 +166,8 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    int gridx = 3;
-    int gridy = 3;
+    int gridx = 2;
+    int gridy = 2;
     cv::namedWindow("grid", cv::WINDOW_NORMAL);
     cv::Mat currentReferenceFrame;
     cap >> currentReferenceFrame;
@@ -224,20 +177,17 @@ int main(int argc, char* argv[])
         Game game;
         std::vector<cv::Mat> grid;
 
-        // Extract frame, apply bounding box and warp
+        // Extract frame
         cv::Mat frame;
         cap >> frame;
 
+        // Normalize image for finding board positions
         cv::Mat gray;
         cv::cvtColor(frame, gray, CV_BGR2GRAY);
         cv::equalizeHist(gray, gray);
         cv::Mat grayClone = gray.clone();
         sharpen(grayClone, gray);
-
-        // Check if cu
-        grid.push_back(currentReferenceFrame);
-        cv::Mat diff = differenceBetween(gray, currentReferenceFrame);
-        grid.push_back(diff);
+        grid.push_back(gray);
 
         // Find board corners
         cv::Mat boardCorners = gray.clone();
@@ -275,7 +225,6 @@ int main(int argc, char* argv[])
                             cv::Point2f center(redCircles[i][0], redCircles[i][1]);
                             std::vector<cv::Point2f> quad = getPositionCorners(corners, x, y);
                             if (isPointInsideQuad(center, quad)) {
-                                std::cout << std::endl << "Circle with center" << center << "is a piece that's inside game position (" << x << "," << y << ")" << std::endl;
                                 game.set_red(x, y);
                             }
                         }
@@ -284,7 +233,6 @@ int main(int argc, char* argv[])
                             cv::Point2f center(yellowCircles[j][0], yellowCircles[j][1]);
                             std::vector<cv::Point2f> quad = getPositionCorners(corners, x, y);
                             if (isPointInsideQuad(center, quad)) {
-                                std::cout << std::endl << "Circle with center" << center << "is a piece that's inside game position (" << x << "," << y << ")" << std::endl;
                                 game.set_yellow(x, y);
                             }
                         }
