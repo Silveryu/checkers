@@ -128,8 +128,13 @@ bool isPointInsideQuad(cv::Point2f c, std::vector<cv::Point2f> quad)
 {
     cv::Point2f p0 = quad.at(0);
     cv::Point2f p3 = quad.at(3);
-    return p0.x < c.x && c.x < p3.x &&
-           p0.y < c.y && c.y < p3.y;
+
+    float thresh_x = abs(p3.x - p0.x)/4;
+    float thresh_y = abs(p3.y - p0.y)/4;
+
+    return p0.x-thresh_x < c.x && c.x < p3.x+thresh_x &&
+           p0.y-thresh_y < c.y && c.y < p3.y+thresh_y;
+
 }
 
 int main(int argc, char* argv[])
@@ -190,11 +195,15 @@ int main(int argc, char* argv[])
             if (!corners.empty()) {
                 for (int x = 0; x < BOARD_SIZE; x++) {
                     for (int y = 0; y < BOARD_SIZE; y++) {
-                        std::cout << x << "," << y << std::endl;
-                        std::vector<cv::Point2f> quad = getPositionCorners(corners, x, y);
-                        if (isPointInsideQuad(center, quad)) {
-                            std::cout << std::endl << "Circle with center" << center << "is a piece that's inside game position (" << x << "," << y << ")" << std::endl;
-                            game.set_red(x, y);
+                        if((x+y)%2 == 0){
+                            std::cout << x << "," << y << std::endl;
+                            
+                            std::vector<cv::Point2f> quad = getPositionCorners(corners, x, y);
+
+                            if (isPointInsideQuad(center, quad)) {
+                                std::cout << std::endl << "Circle with center" << center << "is a piece that's inside game position (" << x << "," << y << ")" << std::endl;
+                                game.set_red(x, y);
+                            }
                         }
                     }
                 }
