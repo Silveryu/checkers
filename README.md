@@ -26,3 +26,6 @@ $ ./bin/main bin/footage.mp4
 ## TODO
 
 - improve silverio's points with cornerSubPix
+- inner-most loop should not set the same (x,y) pair twice
+- try (1) sharpen (2) canny before findChessboardCorners
+- introduce the notion of a commit when setting game state

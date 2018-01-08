@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
 
         // Threshold the HSV image, keep only the yellow pixels
         cv::Mat yellows;
-        cv::inRange(hsv, cv::Scalar(25, 20, 20), cv::Scalar(32, 255, 255), yellows);
+        cv::inRange(hsv, cv::Scalar(25, 95, 95), cv::Scalar(32, 255, 255), yellows);
         cv::GaussianBlur(yellows, yellows, cv::Size(9, 9), 2, 2);
         grid.push_back(yellows);
 
