@@ -200,6 +200,15 @@ int main(int argc, char* argv[])
                             game.set_red(x, y);
                         }
                     }
+
+                    for(size_t j = 0; j < yellowCircles.size(); j++) {
+                        cv::Point2f center(yellowCircles[j][0], yellowCircles[j][1]);
+                        std::vector<cv::Point2f> quad = getPositionCorners(corners, x, y);
+                        if (isPointInsideQuad(center, quad)) {
+                            std::cout << std::endl << "Circle with center" << center << "is a piece that's inside game position (" << x << "," << y << ")" << std::endl;
+                            game.set_yellow(x, y);
+                        }
+                    }
                 }
             }
         }
