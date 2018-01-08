@@ -176,21 +176,18 @@ int main(int argc, char* argv[])
         cv::GaussianBlur(reds, reds, cv::Size(9, 9), 2, 2);
         grid.push_back(reds);
 
-        // Find red circles
-        std::vector<cv::Vec3f> circles;
-        cv::HoughCircles(reds, circles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
-        cv::Mat redCircles = reds.clone();
-        std::cout << circles.size() << " red circles" << std::endl;
-        printVector(circles);
-        for(size_t i = 0; i < circles.size(); i++) {
-            cv::Point2f center(circles[i][0], circles[i][1]);
-            int radius = round(circles[i][2]);
-            cv::circle(redCircles, center, radius, cv::Scalar(0, 255, 0), 5);
-            std::cout << std::endl << "Circle with center" << center << std::endl;
-            if (!corners.empty()) {
-                for (int x = 0; x < BOARD_SIZE; x++) {
-                    for (int y = 0; y < BOARD_SIZE; y++) {
-                        std::cout << x << "," << y << std::endl;
+        // Find red and yellow circles
+        std::vector<cv::Vec3f> redCircles;
+        cv::HoughCircles(reds, redCircles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
+        //std::vector<cv::Vec3f> yellowCircles;
+        //cv::HoughCircles(yellows, yellowCircles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
+
+        // Check if circles are inside game positions
+        if (!corners.empty()) {
+            for (int x = 0; x < BOARD_SIZE; x++) {
+                for (int y = 0; y < BOARD_SIZE; y++) {
+                    for(size_t i = 0; i < redCircles.size(); i++) {
+                        cv::Point2f center(redCircles[i][0], redCircles[i][1]);
                         std::vector<cv::Point2f> quad = getPositionCorners(corners, x, y);
                         if (isPointInsideQuad(center, quad)) {
                             std::cout << std::endl << "Circle with center" << center << "is a piece that's inside game position (" << x << "," << y << ")" << std::endl;
@@ -200,7 +197,6 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        grid.push_back(redCircles);
         game.print();
 
         // Fill up grid
