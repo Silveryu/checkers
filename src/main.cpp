@@ -140,7 +140,30 @@ bool isPointInsideQuad(cv::Point2f c, std::vector<cv::Point2f> quad)
 
     return p0.x-thresh_x < c.x && c.x < p3.x+thresh_x &&
            p0.y-thresh_y < c.y && c.y < p3.y+thresh_y;
+}
 
+cv::Mat differenceBetween(cv::Mat frame, cv::Mat reference)
+{
+    cv::Mat diff;
+    absdiff(frame, reference, diff);
+
+    // Get the mask if difference greater than threshold
+    int th = 10;
+    cv::Mat mask(frame.size(), CV_8UC1);
+    for(int j = 0; j < diff.rows; ++j) {
+        for(int i = 0; i < diff.cols; ++i) {
+            cv::Vec3b pix = diff.at<cv::Vec3b>(j, i);
+            int val = (pix[0] + pix[1] + pix[2]);
+            if (val > th) {
+                mask.at<unsigned char>(j,i) = 255;
+            }
+        }
+    }
+
+    // get the foreground
+    cv::Mat res;
+    cv::bitwise_and(reference, reference, res, mask);
+    return res;
 }
 
 int main(int argc, char* argv[])
@@ -156,9 +179,12 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    int gridx = 2;
-    int gridy = 2;
+    int gridx = 3;
+    int gridy = 3;
     cv::namedWindow("grid", cv::WINDOW_NORMAL);
+    cv::Mat currentReferenceFrame;
+    cap >> currentReferenceFrame;
+    cv::cvtColor(currentReferenceFrame, currentReferenceFrame, CV_BGR2GRAY);
 
     while(true) {
         Game game;
@@ -174,10 +200,10 @@ int main(int argc, char* argv[])
         cv::Mat grayClone = gray.clone();
         sharpen(grayClone, gray);
 
-        cv::Mat edges;
-        cv::GaussianBlur(gray, edges, cv::Size(5, 5), 1.5, 1.5);
-        cv::Canny(edges, edges, 0, 30, 3);
-        grid.push_back(edges);
+        // Check if cu
+        grid.push_back(currentReferenceFrame);
+        cv::Mat diff = differenceBetween(gray, currentReferenceFrame);
+        grid.push_back(diff);
 
         // Find board corners
         cv::Mat boardCorners = gray.clone();
