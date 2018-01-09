@@ -165,8 +165,8 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    int gridx = 2;
-    int gridy = 2;
+    int gridx = 1;
+    int gridy = 1;
     int boardx = 8;
     int boardy = 8;
     cv::namedWindow("grid", cv::WINDOW_NORMAL);
@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
         cv::equalizeHist(gray, gray);
         cv::Mat grayClone = gray.clone();
         sharpen(grayClone, gray);
-        grid.push_back(gray);
+        //grid.push_back(gray);
 
         // Find board corners
         cv::Mat boardCorners = gray.clone();
@@ -201,13 +201,13 @@ int main(int argc, char* argv[])
         cv::Mat reds;
         cv::inRange(hsv, cv::Scalar(160, 100, 100), cv::Scalar(179, 255, 255), reds);
         cv::GaussianBlur(reds, reds, cv::Size(9, 9), 2, 2);
-        grid.push_back(reds);
+        //grid.push_back(reds);
 
         // Threshold the HSV image, keep only the yellow pixels
         cv::Mat yellows;
         cv::inRange(hsv, cv::Scalar(25, 95, 95), cv::Scalar(32, 255, 255), yellows);
         cv::GaussianBlur(yellows, yellows, cv::Size(9, 9), 2, 2);
-        grid.push_back(yellows);
+        //grid.push_back(yellows);
 
         // Find red and yellow circles
         std::vector<cv::Vec3f> redCircles;
