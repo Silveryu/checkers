@@ -165,13 +165,8 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    while(true) {
-        Game game;
-
-        // Extract frame
-        cv::Mat frame;
-        cap >> frame;
-
+    cv::Mat frame;
+    while(cap.read(frame)) {
         // Normalize image for finding board positions
         cv::Mat gray;
         cv::cvtColor(frame, gray, CV_BGR2GRAY);
@@ -207,6 +202,7 @@ int main(int argc, char* argv[])
         cv::imshow("corners", boardCorners);
 
         if (!corners.empty()) {
+            Game game;
             for (int x = 0; x < BOARD_SIZE; x++) {
                 for (int y = 0; y < BOARD_SIZE; y++) {
                     if ((x + y) % 2 == 0) {
