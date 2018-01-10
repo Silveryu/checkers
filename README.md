@@ -34,3 +34,4 @@ $ ./bin/main bin/resized.m4v
 - inner-most loop should not set the same (x,y) pair twice
 - try (1) sharpen (2) canny before findChessboardCorners
 - introduce the notion of a commit when setting game state
+- game state validity check, check if there are pieces surrounding it

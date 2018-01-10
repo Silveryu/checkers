@@ -165,16 +165,8 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    int gridx = 1;
-    int gridy = 1;
-    int boardx = 8;
-    int boardy = 8;
-    cv::namedWindow("grid", cv::WINDOW_NORMAL);
-
     while(true) {
         Game game;
-        std::vector<cv::Mat> grid;
-        std::vector<cv::Mat> board;
 
         // Extract frame
         cv::Mat frame;
@@ -186,13 +178,11 @@ int main(int argc, char* argv[])
         cv::equalizeHist(gray, gray);
         cv::Mat grayClone = gray.clone();
         sharpen(grayClone, gray);
-        //grid.push_back(gray);
 
         // Find board corners
         cv::Mat boardCorners = gray.clone();
         std::vector<cv::Point2f> corners = getBoardCorners(gray);
         cv::drawChessboardCorners(boardCorners, cv::Size(9, 9), cv::Mat(corners), !corners.empty());
-        grid.push_back(boardCorners);
 
         // Threshold the HSV image, keep only the red pixels
         cv::Mat hsv;
@@ -201,19 +191,20 @@ int main(int argc, char* argv[])
         cv::Mat reds;
         cv::inRange(hsv, cv::Scalar(160, 100, 100), cv::Scalar(179, 255, 255), reds);
         cv::GaussianBlur(reds, reds, cv::Size(9, 9), 2, 2);
-        //grid.push_back(reds);
 
         // Threshold the HSV image, keep only the yellow pixels
         cv::Mat yellows;
         cv::inRange(hsv, cv::Scalar(25, 95, 95), cv::Scalar(32, 255, 255), yellows);
         cv::GaussianBlur(yellows, yellows, cv::Size(9, 9), 2, 2);
-        //grid.push_back(yellows);
 
         // Find red and yellow circles
         std::vector<cv::Vec3f> redCircles;
         cv::HoughCircles(reds, redCircles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
         std::vector<cv::Vec3f> yellowCircles;
-        cv::HoughCircles(yellows, yellowCircles, CV_HOUGH_GRADIENT, 1, reds.rows/8, 100, 20, 0, 0);
+        cv::HoughCircles(yellows, yellowCircles, CV_HOUGH_GRADIENT, 1, yellows.rows/8, 100, 20, 0, 0);
+
+        cv::namedWindow("corners", cv::WINDOW_NORMAL);
+        cv::imshow("corners", boardCorners);
 
         if (!corners.empty()) {
             for (int x = 0; x < BOARD_SIZE; x++) {
@@ -237,19 +228,12 @@ int main(int argc, char* argv[])
                     }
                 }
             }
+
+            // Draw the game
             game.print();
-        }
-
-        // Fill up grid
-        int height = 800;
-        int width = height*4/3;
-        cv::Mat res = cv::Mat(height, width, CV_8UC1);
-        tile(grid, res, gridx, gridy);
-        cv::imshow("grid", res);
-
-        //Fill up board
-        if (!corners.empty()) {
-            int dim = 400;
+            size_t boardx = 8;
+            size_t boardy = 8;
+            size_t dim = 400;
             cv::Mat white = cv::Mat(dim, dim, CV_8UC3, cv::Scalar(255,255,255));
             cv::Mat black = cv::Mat::ones(dim, dim, CV_8UC3);
 
@@ -258,11 +242,10 @@ int main(int argc, char* argv[])
 
             cv::Mat whitePiece = cv::Mat::ones(dim, dim, CV_8UC3);
             cv::circle(whitePiece, cv::Point(dim/2,dim/2),dim/4,cv::Scalar(0,255,255), -1, 8, 0);
+            std::vector<cv::Mat> board;
 
-            int j = -1;
-
-            for(int i = 0; board.size() != boardx*boardy;++i) {
-                if(i % 8 == 0){
+            for(int i = 0, j = -1; board.size() != boardx*boardy; ++i) {
+                if(i % 8 == 0) {
                     ++j;
                     i=0;
                 }
@@ -280,6 +263,7 @@ int main(int argc, char* argv[])
             tile(board, boardRes, boardx, boardy);
             cv::imshow("board", boardRes);
         }
+
         if(cv::waitKey(1) == 'p') while(cv::waitKey(1) != 'p');
     }
 
