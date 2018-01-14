@@ -1,8 +1,8 @@
 # Project
 
-bin/
+bin
 
-# Created by https://www.gitignore.io/api/windows,linux,osx,vim,emacs,webstorm,sublimetext,visualstudiocode,c,c++,opencv
+# Created by https://www.gitignore.io/api/windows,linux,osx,vim,emacs,webstorm,sublimetext,visualstudiocode,c,c++,opencv,cmake
 
 ### C ###
 # Prerequisites
@@ -76,6 +76,18 @@ dkms.conf
 *.lai
 
 # Executables
+
+### CMake ###
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+build
 
 ### Emacs ###
 # -*- mode: gitignore; -*-
@@ -227,10 +239,8 @@ GitHub.sublime-settings
 
 ### Vim ###
 # swap
-[._]*.s[a-v][a-z]
-[._]*.sw[a-p]
-[._]s[a-v][a-z]
-[._]sw[a-p]
+.sw[a-p]
+.*.sw[a-p]
 # session
 Session.vim
 # temporary
@@ -332,4 +342,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.gitignore.io/api/windows,linux,osx,vim,emacs,webstorm,sublimetext,visualstudiocode,c,c++,opencv
+
+# End of https://www.gitignore.io/api/windows,linux,osx,vim,emacs,webstorm,sublimetext,visualstudiocode,c,c++,opencv,cmake
