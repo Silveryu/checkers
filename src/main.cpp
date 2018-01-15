@@ -211,6 +211,7 @@ int main(int argc, char* argv[])
                             std::vector<cv::Point2f> quad = getPositionCorners(corners, x, y);
                             if (isPointInsideQuad(center, quad)) {
                                 game.set_red(x, y);
+                                continue;
                             }
                         }
 
@@ -219,6 +220,7 @@ int main(int argc, char* argv[])
                             std::vector<cv::Point2f> quad = getPositionCorners(corners, x, y);
                             if (isPointInsideQuad(center, quad)) {
                                 game.set_yellow(x, y);
+                                continue;
                             }
                         }
                     }
