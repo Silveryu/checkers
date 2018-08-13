@@ -7,7 +7,7 @@ Model a game of checkers from a live video feed where the **camera is not static
 ## Algorithm
 
 1. Sharpen and equalize histogram to find corners more easily
-2. `cv::findChessboardCorners` and manually compute the exterior corners
+2. `cv::findChessboardCorners` and manually compute the exterior corners `completeBoardCorners`
 3. Median blur to obtain better color segmentation results
 4. Red segmentation, yellow segmentation
 5. Gaussian blur to obtain better results with the Hough Circle transform
