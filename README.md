@@ -1,6 +1,6 @@
 # checkers
 
-[![IMAGE ALT TEXT HERE](https://i.imgur.com/a0tAgwl.png?2)](http://www.youtube.com/watch?v=9Maesq2iISM) ![](https://i.imgur.com/oMSBPvL.png?2) ![](https://i.imgur.com/FrdskvG.png?3)
+[![](https://i.imgur.com/a0tAgwl.png?2)](http://www.youtube.com/watch?v=9Maesq2iISM) ![](https://i.imgur.com/oMSBPvL.png?2) ![](https://i.imgur.com/FrdskvG.png?3)
 
 Model a game of checkers from a live video feed where the **camera is not static**.
 
