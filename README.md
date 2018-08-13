@@ -4,13 +4,6 @@
 
 Model a game of checkers from a live video feed where the **camera is not static**.
 
-## Development
-
-```bash
-$ cmake . && make
-$ ./checkers bin/resized.mp4
-```
-
 ## Algorithm
 
 1. Sharpen and equalize histogram to find corners more easily
@@ -20,3 +13,10 @@ $ ./checkers bin/resized.mp4
 5. Gaussian blur to obtain better results with the Hough Circle transform
 6. Apply the Hough Circle transform to the color segmentations to find all the red and yellow circles
 7. Check if the circles’ center is (reasonably) inside the 4 corners that define a game position
+
+## Development
+
+```bash
+$ cmake . && make
+$ ./checkers bin/resized.mp4
+```
