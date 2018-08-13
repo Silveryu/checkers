@@ -1,15 +1,8 @@
 # checkers
 
-## Ruleset
+[![IMAGE ALT TEXT HERE](https://i.imgur.com/a0tAgwl.png?2)](http://www.youtube.com/watch?v=9Maesq2iISM) ![](https://i.imgur.com/oMSBPvL.png?2) ![](https://i.imgur.com/FrdskvG.png?3)
 
-Also called Spanish checkers. It is mainly played in Portugal and in some parts of South America and some Northern African countries.
-
-- Flying kings; men cannot capture backwards
-- 8x8 board size
-- 12 pieces per side
-- Double-corner or light square on player's near-right? Light square is on right, but double corner is on left, as play is on the light squares. (Play on the dark squares with dark square on right is Portuguese draughts.)
-- White moves first
-- A sequence must capture the maximum possible number of pieces, and the maximum possible number of kings from all such sequences.
+Model a game of checkers from a live video feed where the **camera is not static**.
 
 ## Development
 
@@ -18,3 +11,12 @@ $ cmake . && make
 $ ./checkers bin/resized.mp4
 ```
 
+## Algorithm
+
+1. Sharpen and equalize histogram to find corners more easily
+2. `cv::findChessboardCorners` and manually compute the exterior corners
+3. Median blur to obtain better color segmentation results
+4. Red segmentation, yellow segmentation
+5. Gaussian blur to obtain better results with the Hough Circle transform
+6. Apply the Hough Circle transform to the color segmentations to find all the red and yellow circles
+7. Check if the circles’ center is (reasonably) inside the 4 corners that define a game position
